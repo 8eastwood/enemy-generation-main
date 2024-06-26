@@ -5,13 +5,12 @@ using UnityEngine.Pool;
 
 public class Spawner : MonoBehaviour
 {
-    [SerializeField] private List<Transform> _spawnPoints;
-    [SerializeField] private float _speed = 150f;
+    [SerializeField] public List<Transform> _spawnPoints;
     [SerializeField] private Enemy _enemyPrefab;
 
     private ObjectPool<Enemy> _enemiesPool;
-    private int _enemyPoolCapacity = 5;
-    private int _enemyPoolMaxSize = 5;
+    private int _enemyPoolCapacity = 25;
+    private int _enemyPoolMaxSize = 25;
     private int _repeatRate = 2;
 
     private void Awake()
@@ -21,16 +20,13 @@ public class Spawner : MonoBehaviour
 
     private void Start()
     {
-        _spawnPoints = new List<Transform>(_spawnPoints);
-
         StartCoroutine(SpawnEnemyWithRate(_repeatRate));
     }
 
     private Enemy CreateEnemy()
     {
-        int spawnPoint = Random.Range(0, _spawnPoints.Count);
-        Enemy enemy = Instantiate(_enemyPrefab, _spawnPoints[spawnPoint].transform.position, Quaternion.identity);
-        _spawnPoints.RemoveAt(spawnPoint);
+        float randomYAngle = Random.Range(0f, 360f);
+        Enemy enemy = Instantiate(_enemyPrefab, GetSpawnPoint().transform.position, Quaternion.Euler(0f, randomYAngle, 0f));
 
         return enemy;
     }
@@ -42,13 +38,21 @@ public class Spawner : MonoBehaviour
 
     private void GetFromPool(Enemy enemy)
     {
-        enemy.transform.Translate(Vector3.forward * _speed * Time.deltaTime);
         enemy.gameObject.SetActive(true);
+
+        StartCoroutine(enemy.Move());
     }
 
     private void ReleaseInPool(Enemy enemy)
     {
         enemy.gameObject.SetActive(false);
+    }
+
+    private Transform GetSpawnPoint()
+    {
+        int spawnPoint = Random.Range(0, _spawnPoints.Count);
+
+        return _spawnPoints[spawnPoint];
     }
 
     private IEnumerator SpawnEnemyWithRate(int repeatRate)
